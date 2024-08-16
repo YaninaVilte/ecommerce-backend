@@ -10,6 +10,8 @@ import viewsRouter from "./routes/views.router.js";
 import ProductManager from "./managers/product-manager.js";
 import CartManager from "./managers/cart-manager.js";
 
+import mongoose from "mongoose";
+
 const app = express();
 const PORT = 8080;
 
@@ -34,25 +36,29 @@ httpServer.listen(PORT, () => {
     console.log(`Escuchando en http://localhost:${PORT}`);
 });
 
-const io = new Server(httpServer);
+// const io = new Server(httpServer);
 
-io.on("connection", async (socket) => {
-    socket.on("message", (data) => {
-        console.log("Nuevo cliente");
-    });
-    socket.emit("products", await productManager.getProducts());
+// io.on("connection", async (socket) => {
+//     socket.on("message", (data) => {
+//         console.log("Nuevo cliente");
+//     });
+//     socket.emit("products", await productManager.getProducts());
 
-    socket.on("deleteProduct", async (productId) => {
-        await productManager.deleteProduct(productId);
-        socket.emit("products", await productManager.getProducts());
-    });
+//     socket.on("deleteProduct", async (productId) => {
+//         await productManager.deleteProduct(productId);
+//         socket.emit("products", await productManager.getProducts());
+//     });
 
-    socket.on("productForm", async (data) => {
-        const { title, description, code, price, stock, category, thumbnails } = data;
-        await productManager.addProduct({ title, description, code, price, stock, category, thumbnails });
-        socket.emit("products", await productManager.getProducts());
-    });
-});
+//     socket.on("productForm", async (data) => {
+//         const { title, description, code, price, stock, category, thumbnails } = data;
+//         await productManager.addProduct({ title, description, code, price, stock, category, thumbnails });
+//         socket.emit("products", await productManager.getProducts());
+//     });
+// });
+
+mongoose.connect("mongodb+srv://yanivilte:coderhouse@cluster0.jyqtcqx.mongodb.net/e-commerce?retryWrites=true&w=majority&appName=Cluster0")
+    .then(() => console.log("Nos conectamos a la BD correctamente"))
+    .catch((error) => console.log("Tenemos un error de conexión en la BD", error))
 
 export { productManager };
 export { cartManager };
