@@ -1,12 +1,22 @@
-<h1>Productos</h1>
+<h1>Mis productos</h1>
 
 <div class="divProducts">
     {{#each products}}
         <div class="divCard">
             <p>Nombre: {{this.title}}</p>
-            <p>Categoría: {{this.category}}</p>
             <p>Descripción: {{this.description}}</p>
             <p>Precio:$ {{this.price}}</p>
+            <button> Comprar </button>
         </div>
     {{/each}}
 </div>
+
+{{#if hasPrevPage}}
+    <a href="/products?page={{prevPage}}"> Anterior </a>
+{{/if}}
+
+{{#if hasNextPage}}
+    <a href="/products?page={{nextPage}}"> Siguiente </a>
+{{/if}}
+
+<p> {{currentPage}} de {{totalPages}} </p>

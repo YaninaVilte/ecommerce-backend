@@ -71,6 +71,14 @@ class CartManager {
             throw error;
         }
     }
+
+    async updateCart(cartID, updatedProducts) {
+
+    }
+    
+    
+    
+
 }
 
 export default CartManager; 
