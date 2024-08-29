@@ -2,7 +2,6 @@ import CartModel from "../models/cart.model.js";
 
 class CartManager {
 
-
     async createCart() {
         try {
             const newCart = new CartModel({productos: []})
@@ -12,7 +11,6 @@ class CartManager {
             console.error("Error al crear un nuevo carrito:", error);
         }
     }
-
 
     async getCartByID(cartID) {
         try {
@@ -26,7 +24,6 @@ class CartManager {
             throw error;
         }
     }
-
 
     async addProductsToCart(cartID, productID, quantity = 1) {
         try {
@@ -46,46 +43,37 @@ class CartManager {
         }
     }
 
-    // ir viedo desde aca
-
     async removeProductFromCart(cartID, productID) {
         try {
             const cart = await this.getCartByID(cartID);
             if (!cart) {
                 throw new Error("Carrito no encontrado");
             }
-            const productIndex = cart.productos.findIndex(p => p.product.toString() === productID);
+            const productIndex = cart.productos.findIndex(p => p.product._id.toString() === productID);
             if (productIndex === -1) {
                 throw new Error("Producto no encontrado en el carrito");
             }
             cart.productos.splice(productIndex, 1);
-            return cart;
+            await cart.save();
+            return { status: 'success', message: 'Producto eliminado exitosamente del carrito', cart };
         } catch (error) {
             console.error("Error al eliminar el producto del carrito:", error);
             throw error;
         }
     }
-
+    
     async updateProductQuantity(cartID, productID, newQuantity) {
         try {
-            // Obtener el carrito por su ID
             const cart = await this.getCartByID(cartID);
             if (!cart) {
                 throw new Error("Carrito no encontrado");
             }
-
-            // Buscar el producto dentro del carrito
-            const productIndex = cart.productos.findIndex(p => p.product.toString() === productID);
+            const productIndex = cart.productos.findIndex(p => p.product._id.toString() === productID);
             if (productIndex === -1) {
                 throw new Error("Producto no encontrado en el carrito");
             }
-
-            // Actualizar la cantidad del producto
             cart.productos[productIndex].quantity = newQuantity;
-
-            // Guardar el carrito actualizado
             await cart.save();
-
             return cart;
         } catch (error) {
             console.error("Error al actualizar la cantidad del producto en el carrito:", error);
@@ -99,11 +87,7 @@ class CartManager {
             if (!cart) {
                 throw new Error("Carrito no encontrado");
             }
-
-            // Vaciamos los productos del carrito
             cart.productos = [];
-
-            // Guardamos el carrito actualizado
             await cart.save();
             return cart;
         } catch (error) {
@@ -111,6 +95,31 @@ class CartManager {
             throw error;
         }
     }
+
+    async updateProductsToCart(cartID, products) {
+        try {
+            const cart = await this.getCartByID(cartID);
+            if (!cart) {
+                throw new Error("Carrito no encontrado");
+            }
+            for (const { product, quantity } of products) {
+                const productID = product._id; 
+                const productExist = cart.productos.find(p => p.product.toString() === productID.toString());
+                if (productExist) {
+                    productExist.quantity += quantity;
+                } else {
+                    cart.productos.push({ product: productID, quantity });
+                }
+            }
+            cart.markModified("productos");
+            await cart.save();
+            return cart;
+        } catch (error) {
+            console.error("Error al actualizar los productos del carrito:", error);
+            throw error;
+        }
+    }
+
 }
 
 export default CartManager; 

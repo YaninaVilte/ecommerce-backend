@@ -1,23 +1,57 @@
 import { Router } from "express";
 import ProductManager from "../dao/db/product-manager-db.js";
+import ProductsModel from "../dao/models/products.model.js";
 
 const manager = new ProductManager();
 const productsRouter = Router();
 
 productsRouter.get("/", async (req, res) => {
-    const limit = req.query.limit
+    const { page = 1, limit = 10, sort = 'desc', query = '' } = req.query;
+    const sortOrder = sort === 'asc' ? 1 : -1;
+    
+    const filter = query ? {
+        $or: [
+            { title: { $regex: query, $options: 'i' } },
+            { description: { $regex: query, $options: 'i' } },
+            { category: { $regex: query, $options: 'i' } },
+            { code: { $regex: query, $options: 'i' } },
+            { status: query === 'true' ? true : query === 'false' ? false : undefined },
+            { stock: parseInt(query) },
+            { price: parseInt(query) }
+
+        ]
+    } : {};
+
     try {
-        const arrayProducts = await manager.getProducts();
-        if (limit) {
-            res.send(arrayProducts.slice(0, limit));
-        } else {
-            res.send(arrayProducts);
-        }
+        const productsList = await ProductsModel.paginate(filter, {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            sort: { price: sortOrder }
+        });
+
+        const prevLink = productsList.hasPrevPage ? 
+            `/products?page=${productsList.prevPage}&limit=${limit}&sort=${sort}&query=${query}` : null;
+        const nextLink = productsList.hasNextPage ? 
+            `/products?page=${productsList.nextPage}&limit=${limit}&sort=${sort}&query=${query}` : null;
+
+        res.json({
+            status: 'success',
+            payload: 
+            {docs: [productsList.docs]},
+            totalPages: productsList.totalPages,
+            prevPage: productsList.prevPage,
+            nextPage: productsList.nextPage,
+            page: productsList.page,
+            hasPrevPage: productsList.hasPrevPage,
+            hasNextPage: productsList.hasNextPage,
+            prevLink,
+            nextLink
+        });
     } catch (error) {
-        res.status(500).send("Error interno del servidor");
+        console.error("Error al obtener los productos:", error);
+        res.status(500).json({ status: 'error', message: 'Error' });
     }
 });
-
 
 productsRouter.get("/:pid", async (req, res) => {
     const id = req.params.pid;
@@ -33,7 +67,6 @@ productsRouter.get("/:pid", async (req, res) => {
     }
 });
 
-
 productsRouter.post("/", async (req, res) => {
     const newProduct = req.body;
     try {
@@ -43,8 +76,6 @@ productsRouter.post("/", async (req, res) => {
         res.status(500).send("Error del servidor")
     }
 })
-
-
 
 productsRouter.put("/:pid", async (req, res) => {
     const { pid } = req.params;
@@ -58,7 +89,6 @@ productsRouter.put("/:pid", async (req, res) => {
     }
 });
 
-
 productsRouter.delete("/:pid", async (req, res) => {
     const { pid } = req.params;
 
@@ -70,9 +100,5 @@ productsRouter.delete("/:pid", async (req, res) => {
         res.status(500).send("Error al eliminar producto");
     }
 });
-
-
-
-
 
 export default productsRouter;

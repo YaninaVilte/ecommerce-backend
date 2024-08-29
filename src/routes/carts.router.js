@@ -1,10 +1,8 @@
 import { Router } from "express";
 import CartManager from "../dao/db/cart-manager-db.js";
 
-
 const cartManager = new CartManager();
 const cartsRouter = Router();
-
 
 cartsRouter.post("/", async (req, res) => {
     try {
@@ -39,56 +37,27 @@ cartsRouter.post("/:cid/product/:pid", async (req, res) => {
     }
 })
 
-// ir viendo desde aca
-
 cartsRouter.delete("/:cid/product/:pid", async (req, res) => {
     const { pid, cid } = req.params;
     try {
-        const cart = await cartManager.getCartByID(cid);
-        if (!cart) {
-            return res.status(404).send("Carrito no encontrado");
+        const result = await cartManager.removeProductFromCart(cid, pid);
+        if (result.status === 'success') {
+            res.status(200).send(result.message);
+        } else {
+            res.status(404).send(result.message);
         }
-
-        // Busca el índice del producto dentro del carrito
-        const productIndex = cart.productos.findIndex(product => product.product.toString() === pid);
-        if (productIndex === -1) {
-            return res.status(404).send("Producto no encontrado en el carrito");
-        }
-
-        // Elimina el producto del carrito
-        cart.productos.splice(productIndex, 1);
-
-        // Guarda el carrito actualizado
-        await cart.save();
-
-        res.send("Producto eliminado exitosamente del carrito");
     } catch (error) {
-        console.log(error);
-        res.status(500).send("Error al eliminar producto del carrito");
+        console.error("Error al eliminar producto del carrito:", error);
+        res.status(500).send("Error");
     }
 });
 
-// VERVERVER PUT api / carts /:cid deberá actualizar el carrito con un arreglo de productos con el formato especificado arriba. No entiendo que debe hacer aca
-
-cartsRouter.put("/:cid", async (req, res) => {
-
-});
-
-
-// PUT api / carts /: cid / products /:pid deberá poder actualizar SÓLO la cantidad de ejemplares del producto por cualquier cantidad pasada desde req.body
-cartsRouter.post("/:cid/product/:pid", async (req, res) => {
+cartsRouter.put("/:cid/product/:pid", async (req, res) => {
     const { cid, pid } = req.params;
     const { quantity } = req.body;
-
-    // Verificar que la cantidad sea válida
-    if (quantity === undefined || quantity <= 0) {
-        return res.status(400).send("Cantidad inválida");
-    }
-
     try {
-        // Llama al método para actualizar la cantidad del producto en el carrito
         const updatedCart = await cartManager.updateProductQuantity(cid, pid, quantity);
-        res.json(updatedCart.productos);  // Devolver los productos actualizados del carrito
+        res.json(updatedCart.productos);
     } catch (error) {
         console.log(error);
         res.status(500).send("Error al actualizar la cantidad del producto");
@@ -97,7 +66,6 @@ cartsRouter.post("/:cid/product/:pid", async (req, res) => {
 
 cartsRouter.delete("/:cid", async (req, res) => {
     const { cid } = req.params;
-
     try {
         const clearedCart = await cartManager.clearCart(cid);
         res.json({ message: "Carrito vaciado exitosamente", cart: clearedCart });
@@ -107,5 +75,21 @@ cartsRouter.delete("/:cid", async (req, res) => {
     }
 });
 
+cartsRouter.put("/:cid", async (req, res) => {
+    const cartID = req.params.cid;
+    const products = req.body;
+    try {
+        if (!Array.isArray(products)) {
+            return res.status(400).send("El cuerpo de la solicitud debe ser un array de productos");
+        }
+        const updatedCart = await cartManager.updateProductsToCart(cartID, products);
+        res.status(200).json({
+            message: 'Productos actualizados exitosamente'
+        });
+    } catch (error) {
+        console.error("Error al actualizar los productos del carrito:", error);
+        res.status(500).send("Error al actualizar los productos del carrito");
+    }
+});
 
 export default cartsRouter;
