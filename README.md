@@ -5,7 +5,7 @@
 
 ## :pencil:Instalacion del proyecto 
 
-### Para instalar el proyecto se deberá descargar el mismo en https://github.com/YaninaVilte/segundaentrega.git. En el editor de código se derá abrir la terminal y a continuación escribir:
+### Para instalar el proyecto se deberá descargar el mismo en https://github.com/YaninaVilte/ecommerce-backend.git En el editor de código se derá abrir la terminal y a continuación escribir:
 
 ```
 npm install
@@ -20,7 +20,7 @@ npm install
 ```
 npm run dev
 ```
-### na vez realizado los puntos anteriores, el servidor estará corriendo en http://localhost:8080.
+### Una vez realizado los puntos anteriores, el servidor estará corriendo en http://localhost:8080.
 
 
 ## :boom:Endpoints del proyecto
@@ -41,6 +41,7 @@ npm run dev
 #### **PUT** /api/carts/:cartId/product/:productId: Actualiza la cantidad de un producto en el carrito.
 #### **DELETE** /api/carts/:cartId/product/:productId: Elimina un producto determinado del carrito.
 #### **DELETE** /api/carts/:id: Vacía el carrito seleccionado.
+
 
 ### :woman:Autor
 #### Yanina G. Vilte
